@@ -454,6 +454,10 @@ TON STYLE :
 
 POUR COMMENCER : Quand l'élève te cite un objet, commence toujours par accuser réception avec enthousiasme, puis pose ta première question d'enquête. N'explique jamais rien avant que l'élève ait réfléchi.`;
 
+// ── CONFIG GEMINI ────────────────────────────────────────────────────────
+const GEMINI_KEY = 'AIzaSyDTdRAg8hLvMFhQNZLLbC8ajyZBClnpOrY';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+
 // ── STATE ────────────────────────────────────────────────────────────────
 const history = [];
 const chatWindow = document.getElementById('chat-window');
@@ -491,19 +495,24 @@ async function sendMessage() {
   const typingEl = showTyping();
 
   try {
-    const response = await fetch('https://meca-proxy.blanchard-romain.workers.dev/', {
+    // Convertit l'historique au format Gemini
+    const geminiContents = history.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+
+    const response = await fetch(GEMINI_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        system: SYSTEM_PROMPT,
-        messages: history
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: geminiContents,
+        generationConfig: { maxOutputTokens: 500 }
       })
     });
 
     const data = await response.json();
-    const reply = data?.content?.[0]?.text || "⚠️ Erreur de connexion avec MÉCA.";
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ Erreur de connexion avec MÉCA.";
 
     typingEl.remove();
     robotFace.classList.remove('talking');
