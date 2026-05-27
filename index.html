@@ -454,9 +454,9 @@ TON STYLE :
 
 POUR COMMENCER : Quand l'élève te cite un objet, commence toujours par accuser réception avec enthousiasme, puis pose ta première question d'enquête. N'explique jamais rien avant que l'élève ait réfléchi.`;
 
-// ── CONFIG GROQ ──────────────────────────────────────────────────────────
-const GROQ_KEY = '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';
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+// ── CONFIG PROXY ─────────────────────────────────────────────────────────
+// La clé API est sécurisée dans Cloudflare Workers — jamais dans ce fichier
+const PROXY_URL = 'https://meca-proxy.blanchard-romain.workers.dev/';
 
 // ── STATE ────────────────────────────────────────────────────────────────
 const history = [];
@@ -495,12 +495,9 @@ async function sendMessage() {
   const typingEl = showTyping();
 
   try {
-    const response = await fetch(GROQ_URL, {
+    const response = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + GROQ_KEY
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         max_tokens: 500,
