@@ -494,12 +494,12 @@ async function sendMessage() {
   robotFace.classList.add('talking');
   const typingEl = showTyping();
 
-  try {
+  const callAPI = async (attempt = 1) => {
     const response = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         max_tokens: 500,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
@@ -507,7 +507,15 @@ async function sendMessage() {
         ]
       })
     });
+    if (response.status === 429 && attempt < 4) {
+      await new Promise(r => setTimeout(r, attempt * 3000));
+      return callAPI(attempt + 1);
+    }
+    return response;
+  };
 
+  try {
+    const response = await callAPI();
     const data = await response.json();
     const reply = data?.choices?.[0]?.message?.content || "⚠️ Erreur de connexion avec MÉCA.";
 
